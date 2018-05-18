@@ -4,12 +4,19 @@
   "description": "Module to build database schema",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "test": "echo \"Error: No test specified\" && exit 1"
   },
-  "author": "dschuan",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dschuan/database-schema-builder.git"
+  },
+  "author": "dschuan ",
   "license": "ISC",
+  "homepage": "https://github.com/dschuan/database-schema-builder",
   "dependencies": {
     "assert": "^1.4.1",
+    "axios": "^0.18.0",
+    "mkdirp": "^0.5.1",
     "mongodb": "^3.1.0-beta4"
   }
 }
