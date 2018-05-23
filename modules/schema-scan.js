@@ -1,33 +1,72 @@
 const assert = require('assert');
 const MongoClient = require('mongodb').MongoClient;
 
-const dbscan = require('./database-scan');
 const dbData = require('./get-database-info');
 
-const findDocs = (db, callback) => {
-  const collection = db.collection('rocketchat_message');
-  collection.find({}).toArray(function(err, docs) {
-    assert.equal(null, err);
-    console.log("Found records: ");
-    console.log(docs);
-    callback(docs);
+
+
+//returns all collection names in database
+const getCollectionName = (rawData) => {
+  let collectionList = rawData.cursor.firstBatch
+  collectionList = collectionList.map((collection) => {
+    return collection.name
   })
+  return collectionList
 }
 
 
+module.exports = (async function() {
+  const url = dbData.url;
+  const dbName = dbData.dbName;
 
-module.exports = () => {
-  dbscan(function(res) {
-    console.log(res)
+  let client;
+  let collections = [];
+  let schema;
 
-    MongoClient.connect(dbData.url, {useNewUrlParser: true}, function(err, client){
-      assert.equal(null, err);
-      const db = client.db(dbData.dbName);
-      findDocs(db, function(doc) {
-        console.log(doc);
-        client.close();
-      })
-    })
-  })
+  try {
+    client = await MongoClient.connect(url, {useNewUrlParser: true});
 
-}
+    const db = client.db(dbName);
+
+    collections = await db.command({'listCollections': 1});
+    collections = getCollectionName(collections);
+
+    let mr = await db.collection('rocketchat_message').mapReduce(
+      function() {
+        //recursive function to obtain all sub fields of an object, where applicable
+        const getSubField = function(obj, baseField) {
+          emit(baseField, null)
+          if (typeof obj === 'object') {
+            for (var key in obj) {
+              getSubField(obj[key], baseField + '.' + key)
+            }
+          }
+        }
+
+        for (var key in this) {
+          emit(key, null)
+
+          getSubField(this[key], key)
+
+
+        }
+      },
+      function(key, val) {
+        return typeof val
+      },
+      {"out": "rocketchat_message" + "_keys"}
+    );
+
+    schema = await mr.find({}).toArray();
+    console.log(schema)
+
+
+    //console.log(collections);
+  } catch (err) {
+    console.log(err.stack);
+  }
+
+  if (client) {
+    client.close()
+  }
+})
