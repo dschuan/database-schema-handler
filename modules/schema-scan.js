@@ -35,7 +35,11 @@ module.exports = (async function() {
       function() {
         //recursive function to obtain all sub fields of an object, where applicable
         const getSubField = function(obj, baseField) {
-          emit(baseField, null)
+          if (Array.isArray(obj) || typeof obj === 'function') {
+            emit(baseField, obj)
+          } else {
+            emit(baseField, typeof obj)
+          };
           if (typeof obj === 'object') {
             for (var key in obj) {
               getSubField(obj[key], baseField + '.' + key)
@@ -44,22 +48,53 @@ module.exports = (async function() {
         }
 
         for (var key in this) {
-          emit(key, null)
+          if (!!(this[key].constructor.name)) {
+            emit(key, this[key].constructor.name)
+          } else {
+            emit(key, this[key])
+          }
 
           getSubField(this[key], key)
 
 
         }
       },
-      function(key, val) {
-        return typeof val
+      function(key, value) {
+        if (Array.isArray(value)) {
+          let val = value[0];
+          if (Array.isArray(val)) {
+            val = val.map(function(v) {
+              return typeof v
+            });
+            val.filter(function(res, index, self) {
+              return self.indexOf(res) === index;
+            })
+
+            if (val.length > 1) {
+              const output = val.reduce(function(prev, next) {
+                return prev + '/' + next;
+              })
+              return "Array." + output;
+            } else {
+              return "Array." + val[0]
+            }
+          } else {
+            if (typeof val === 'function') {
+              return val.constructor.name;
+            } else {
+              return val;
+            }
+          }
+        }
+
+
       },
       {"out": "rocketchat_message" + "_keys"}
     );
 
     schema = await mr.find({}).toArray();
+    await mr.drop()
     console.log(schema)
-
 
     //console.log(collections);
   } catch (err) {
