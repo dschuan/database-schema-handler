@@ -14,7 +14,16 @@ const getCollectionName = (rawData) => {
   return collectionList
 }
 
-
+const buildSchema = (schema) => {
+  let res = {};
+  schema.forEach((obj) => {
+    const key = obj._id;
+    const dataType = obj.value;
+    const isOptional = obj.isOptional;
+    res[key] = {dataType, isOptional}
+  })
+  return res;
+}
 module.exports = (async function() {
   const url = dbData.url;
   const dbName = dbData.dbName;
@@ -93,8 +102,27 @@ module.exports = (async function() {
     );
 
     schema = await mr.find({}).toArray();
-    await mr.drop()
     console.log(schema)
+    const keys = schema.map((key) => {
+      return key._id
+    })
+    /*block of code below written so that it is synchronous,
+    and each element of array is handled one after another*/
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      const count = await db.collection('rocketchat_message').find({ [key]: {$exists: false}}).count();
+      const isOptional = (count > 0)
+      schema.forEach((obj) => {
+        if (obj._id === key) {
+          obj.isOptional = isOptional;
+        }
+      })
+
+    }
+    schema = buildSchema(schema)
+    console.log(schema)
+
+    await mr.drop()
 
     //console.log(collections);
   } catch (err) {
