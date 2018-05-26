@@ -9,21 +9,43 @@ const dbData = require('./get-database-info');
 const getCollectionName = (rawData) => {
   let collectionList = rawData.cursor.firstBatch
   collectionList = collectionList.map((collection) => {
-    return collection.name
+    return collection.name;
   })
   return collectionList
 }
 
 const buildSchema = (schema) => {
+  let sortedSchema = schema.map((element) => {
+    const field = element._id.split('.');
+    element._id = field;
+    return element
+  })
+  sortedSchema = sortedSchema.filter((obj) => {
+    let fields = obj._id;
+    if (!fields.includes('tojson')) {
+      return obj
+    }
+  })
   let res = {};
-  schema.forEach((obj) => {
-    const key = obj._id;
+  sortedSchema.forEach((obj) => {
+    let fields = obj._id;
     const dataType = obj.value;
     const isOptional = obj.isOptional;
-    res[key] = {dataType, isOptional}
+    const fieldIndent = fields.length;
+    if (fieldIndent > 1) {
+      const childField = fields.pop();
+      const baseField = fields.reduce((prev, curr) => {
+        prev + curr;
+      });
+      res[baseField][childField] = { dataType, isOptional }
+    } else {
+      res[fields[0]] = {dataType, isOptional}
+    }
+
   })
   return res;
 }
+
 module.exports = (async function() {
   const url = dbData.url;
   const dbName = dbData.dbName;
@@ -102,7 +124,6 @@ module.exports = (async function() {
     );
 
     schema = await mr.find({}).toArray();
-    console.log(schema)
     const keys = schema.map((key) => {
       return key._id
     })
