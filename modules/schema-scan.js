@@ -1,6 +1,6 @@
 const assert = require('assert');
 const MongoClient = require('mongodb').MongoClient;
-
+const fs = require('fs');
 const dbData = require('./get-database-info');
 
 
@@ -136,16 +136,26 @@ const buildSchemaFromCollection = async function(db, collectionName) {
   }
   schema = buildSchema(schema)
   console.log(schema)
-
   await mr.drop()
+
   return schema
 }
 
+const exportSchema = async (schema, collection, dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir);
+  }
+  const filePath = `${dir}/${collection}.json`
+  await fs.writeFile(filePath, schema, (err) => {
+    assert.equal(err);
+    console.log("Saving file at " + collection);
+  });
 
+}
 module.exports = (async function() {
   const url = dbData.url;
   const dbName = dbData.dbName;
-
+  const pathName = "./schemas"
   let client;
   let collections = [];
   let schemas = [];
@@ -160,9 +170,10 @@ module.exports = (async function() {
 
     for (let i = 0; i < collections.length; i++) {
       const col = collections[i]
-      schemas.push(await buildSchemaFromCollection(db, col))
+      const schema = await buildSchemaFromCollection(db, col);
+      await exportSchema(schema, col, pathName)
     }
-    await buildSchemaFromCollection(db, 'rocketchat_message');
+
     //console.log(collections);
   } catch (err) {
     console.log(err.stack);

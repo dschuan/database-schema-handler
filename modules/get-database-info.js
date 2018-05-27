@@ -7,4 +7,4 @@ const dbName = rl.question("Key i;n your database name: (Default 'meteor')");
 console.log(dbName)
 module.exports.dbName = (dbName === '') ? "meteor" : dbName;
 
-const url = "mongodb://127.0.0.1:3001/meteor";
+//mongodb://127.0.0.1:3001/meteor
