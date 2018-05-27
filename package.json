@@ -17,6 +17,7 @@
     "assert": "^1.4.1",
     "axios": "^0.18.0",
     "mkdirp": "^0.5.1",
-    "mongodb": "^3.1.0-beta4"
+    "mongodb": "^3.1.0-beta4",
+    "readline-sync": "^1.4.9"
   }
 }
