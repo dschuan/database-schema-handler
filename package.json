@@ -1,23 +1,27 @@
 {
-  "name": "database-schema-builder",
-  "version": "0.1.0",
-  "description": "Module to build database schema",
+  "name": "database-schema-handler",
+  "version": "0.2.0",
+  "description": "Module to build database schema and check collections against schema",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: No test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/dschuan/database-schema-builder.git"
+    "url": "https://github.com/dschuan/database-schema-handler.git"
   },
   "author": "dschuan ",
   "license": "ISC",
-  "homepage": "https://github.com/dschuan/database-schema-builder",
+  "homepage": "https://github.com/dschuan/database-schema-handler",
   "dependencies": {
     "assert": "^1.4.1",
     "axios": "^0.18.0",
     "mkdirp": "^0.5.1",
     "mongodb": "^3.1.0-beta4",
     "readline-sync": "^1.4.9"
+  },
+  "devDependencies": {
+    "eslint": "^4.19.1",
+    "eslint-config-google": "^0.9.1"
   }
 }

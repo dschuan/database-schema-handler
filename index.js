@@ -1,3 +1,3 @@
-const schema_generator = require('./modules/schema-scan');
-
-schema_generator()
+const schemaGenerator = require('./modules/schema-scan');
+const dbChecker = require('./modules/check-database');
+schemaGenerator();
