@@ -4,7 +4,7 @@ const fs = require('fs');
 const dbData = require('./get-database-info');
 const getCollectionName = require('./handle-collection-data');
 
-
+// TODO: Run test on _raix_push_notification
 // transforms raw schema into a json format
 const buildSchema = (schema) => {
   let sortedSchema = schema.map((element) => {
@@ -126,7 +126,6 @@ const buildSchemaFromCollection = async function(db, collectionName) {
     });
   }
   schema = buildSchema(schema);
-  console.log(schema);
   await mr.drop();
 
   return schema;
@@ -137,8 +136,10 @@ const exportSchema = async (schema, collection, dir) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir);
   }
+  console.log(schema);
+  const content = JSON.stringify(schema, null, 2);
   const filePath = `${dir}/${collection}.json`;
-  await fs.writeFile(filePath, schema, (err) => {
+  await fs.writeFile(filePath, content, (err) => {
     assert.equal(err);
     console.log('Saving file at ' + collection);
   });
