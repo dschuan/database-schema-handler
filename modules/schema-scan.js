@@ -21,8 +21,9 @@ const buildSchema = (schema) => {
   let res = {};
   sortedSchema.forEach((obj) => {
     let fields = obj._id;
-    const dataType = obj.value;
-    const isOptional = obj.isOptional;
+    const type = typeof obj.value !== 'string' ? obj.value :
+      obj.value.replace(/\b\w/g, (c) => c.toUpperCase());
+    const optional = obj.isOptional;
     const fieldIndent = fields.length;
     if (fieldIndent > 1) {
       const childField = fields.pop();
@@ -31,12 +32,12 @@ const buildSchema = (schema) => {
           prev + curr;
         });
       if (baseField) {
-        res[baseField][childField] = {dataType, isOptional};
+        res[baseField][childField] = {type, optional};
       } else {
-        res[childField] = {dataType, isOptional};
+        res[childField] = {type, optional};
       }
     } else {
-      res[fields[0]] = {dataType, isOptional};
+      res[fields[0]] = {type, optional};
     }
   });
   return res;
@@ -116,7 +117,7 @@ const buildSchemaFromCollection = async function(db, collectionName) {
   // and each element of array is handled one after another
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
-    const count = await db.collection('rocketchat_message')
+    const count = await db.collection(collectionName)
       .find({[key]: {$exists: false}}).count();
     const isOptional = (count > 0);
     schema.forEach((obj) => {
@@ -136,7 +137,6 @@ const exportSchema = async (schema, collection, dir) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir);
   }
-  console.log(schema);
   const content = JSON.stringify(schema, null, 2);
   const filePath = `${dir}/${collection}.json`;
   await fs.writeFile(filePath, content, (err) => {
