@@ -11,7 +11,7 @@ module.exports = (async function() {
   const dbName = dbData.dbName;
   const testCollection = 'rocketchat_apps';
   let client;
-  let documents;
+  let documents = [];
   try {
     client = await MongoClient.connect(url, {useNewUrlParser: true});
 
@@ -22,12 +22,20 @@ module.exports = (async function() {
     // console.log(collections);
     let schema = getSchema(testCollection);
     console.log(schema);
-    schema = new SimpleSchema(schema);
+    schema = new SimpleSchema(schema).newContext();
     const col = db.collection(testCollection);
-    const r = await col.find({});
-    await r.forEach((doc) => {
-      documents.push(doc);
-      console.log(doc);
+    const r = await col.find({}).toArray();
+    console.log(r);
+    documents = r.map((doc) => {
+      schema.validate(doc);
+      console.log(schema.isValid());
+      console.log(schema.validationErrors());
+      if (!schema.isValid()) {
+        documents.push({
+          'id': doc._id,
+          'errors': schema.validationErrors(),
+        });
+      }
     });
   } catch (error) {
     if (error) {
