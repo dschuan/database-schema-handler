@@ -3,45 +3,9 @@ const MongoClient = require('mongodb').MongoClient;
 const fs = require('fs');
 const dbData = require('./get-database-info');
 const getCollectionName = require('./handle-collection-data');
+const buildSchema = require('./format-schema').buildSchema;
 
 // TODO: Run test on _raix_push_notification
-// transforms raw schema into a json format
-const buildSchema = (schema) => {
-  let sortedSchema = schema.map((element) => {
-    const field = element._id.split('.');
-    element._id = field;
-    return element;
-  });
-  sortedSchema = sortedSchema.filter((obj) => {
-    let fields = obj._id;
-    if (!fields.includes('tojson')) {
-      return obj;
-    }
-  });
-  let res = {};
-  sortedSchema.forEach((obj) => {
-    let fields = obj._id;
-    const type = typeof obj.value !== 'string' ? obj.value :
-      obj.value.replace(/\b\w/g, (c) => c.toUpperCase());
-    const optional = obj.isOptional;
-    const fieldIndent = fields.length;
-    if (fieldIndent > 1) {
-      const childField = fields.pop();
-      const baseField = !(fields.length > 0) ?
-        null : fields.reduce((prev, curr) => {
-          prev + curr;
-        });
-      if (baseField) {
-        res[baseField][childField] = {type, optional};
-      } else {
-        res[childField] = {type, optional};
-      }
-    } else {
-      res[fields[0]] = {type, optional};
-    }
-  });
-  return res;
-};
 
 // contains the function that executes the Map Reduce function on a collection,
 // then builds the schema

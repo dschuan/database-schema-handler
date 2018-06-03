@@ -1,44 +1,10 @@
 const assert = require('assert');
 const SimpleSchema = require('simpl-schema').default;
 const MongoClient = require('mongodb').MongoClient;
+
 const dbData = require('./get-database-info');
 const getCollectionName = require('./handle-collection-data');
-
-const formatSchema = (currentKey, into, target) => {
-  for (let i in into) {
-    if (into.hasOwnProperty(i)) {
-      let newKey = i;
-      let newVal = into[i];
-      const optional = newVal.optional;
-      const type = newVal.type;
-      delete newVal.optional;
-      delete newVal.type;
-      console.log(newVal);
-      if (currentKey.length > 0) {
-        newKey = `${currentKey}.${i}`;
-      }
-      if (!(Object.keys(newVal).length === 0 &&
-      newVal.constructor === Object)) {
-        target[newKey] = {
-          optional,
-          type,
-        };
-        formatSchema(newKey, newVal, target);
-      } else {
-        newVal['optional'] = optional;
-        newVal['type'] = type;
-        target[newKey] = newVal;
-      }
-    }
-  }
-};
-
-const getSchema = (colName) => {
-  let schema = require(`../schemas/${colName}.json`);
-  let res = {};
-  formatSchema('', schema, res);
-  return res;
-};
+const getSchema = require('./format-schema').toSchema;
 
 module.exports = (async function() {
   const url = dbData.url;
