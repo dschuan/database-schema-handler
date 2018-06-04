@@ -28,15 +28,16 @@ module.exports = (async function() {
     console.log(r);
     documents = r.map((doc) => {
       schema.validate(doc);
+      const res = {};
       console.log(schema.isValid());
       console.log(schema.validationErrors());
+      res['isValid'] = schema.isValid();
       if (!schema.isValid()) {
-        documents.push({
-          'id': doc._id,
-          'errors': schema.validationErrors(),
-        });
+        res['errors'] = schemas.validationErrors();
       }
+      return res;
     });
+    return documents;
   } catch (error) {
     if (error) {
       console.log(error.stack);

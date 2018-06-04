@@ -54,9 +54,7 @@ const buildSchemaFromCollection = async function(db, collectionName) {
           });
 
           if (val.length > 1) {
-            const output = val.reduce(function(prev, next) {
-              return prev + '/' + next;
-            });
+            const output = val.join('/');
             return 'Array.' + output;
           } else {
             return 'Array.' + val[0];

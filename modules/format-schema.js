@@ -1,4 +1,3 @@
-
 const formatToSchema = (currentKey, into, target) => {
   for (let i in into) {
     if (into.hasOwnProperty(i)) {
@@ -8,7 +7,6 @@ const formatToSchema = (currentKey, into, target) => {
       const type = newVal.type;
       delete newVal.optional;
       delete newVal.type;
-      console.log(newVal);
       if (currentKey.length > 0) {
         newKey = `${currentKey}.${i}`;
       }
@@ -20,12 +18,24 @@ const formatToSchema = (currentKey, into, target) => {
         };
         formatToSchema(newKey, newVal, target);
       } else {
-        newVal['optional'] = optional;
         newVal['type'] = type;
+        newVal['optional'] = optional;
         target[newKey] = newVal;
       }
     }
   }
+};
+
+const addKeys = (obj, arr, val) => {
+  obj[arr[0]] = obj[arr[0]] || {};
+  let tmpObj = obj[arr[0]];
+  if (arr.length > 1) {
+    arr.shift();
+    addKeys(tmpObj, arr, val);
+  } else {
+    obj[arr[0]] = val;
+  }
+  return obj;
 };
 
 module.exports.buildSchema = (schema) => {
@@ -48,16 +58,8 @@ module.exports.buildSchema = (schema) => {
     const optional = obj.isOptional;
     const fieldIndent = fields.length;
     if (fieldIndent > 1) {
-      const childField = fields.pop();
-      const baseField = !(fields.length > 0) ?
-        null : fields.reduce((prev, curr) => {
-          prev + curr;
-        });
-      if (baseField) {
-        res[baseField][childField] = {type, optional};
-      } else {
-        res[childField] = {type, optional};
-      }
+      const value = {type, optional};
+      res = addKeys(res, fields, value);
     } else {
       res[fields[0]] = {type, optional};
     }
