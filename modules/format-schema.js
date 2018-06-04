@@ -55,7 +55,7 @@ module.exports.buildSchema = (schema) => {
     let fields = obj._id;
     const type = typeof obj.value !== 'string' ? obj.value :
       obj.value.replace(/\b\w/g, (c) => c.toUpperCase());
-    const optional = obj.isOptional;
+    const optional = obj.optional;
     const fieldIndent = fields.length;
     if (fieldIndent > 1) {
       const value = {type, optional};

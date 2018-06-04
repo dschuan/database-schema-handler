@@ -5,6 +5,33 @@ const dbData = require('./get-database-info');
 const getCollectionName = require('./handle-collection-data');
 const buildSchema = require('./format-schema').buildSchema;
 
+const keyPartOfArray = (arrayKeys, key) => {
+  // key is actually an array element
+  return arrayKeys.some((v) => {
+    return (key.indexOf(v) > -1);
+  });
+};
+
+const returnKeys = (schema) => {
+  let arrayKeys = schema.filter((key) => {
+    if (key.value === 'Array') {
+      return key;
+    }
+  });
+  arrayKeys = arrayKeys.map((key) => {
+    return key._id;
+  });
+  let keys = schema.map((key) => {
+    return key._id;
+  });
+  keys = keys.filter((key, schema) => {
+    if (!keyPartOfArray(arrayKeys, key)) {
+      return key;
+    }
+  });
+  keys = keys.concat(arrayKeys);
+  return keys;
+};
 // TODO: Run test on _raix_push_notification
 
 // contains the function that executes the Map Reduce function on a collection,
@@ -72,22 +99,25 @@ const buildSchemaFromCollection = async function(db, collectionName) {
   );
 
   schema = await mr.find({}).toArray();
-  const keys = schema.map((key) => {
-    return key._id;
-  });
+  const keys = returnKeys(schema);
   // block of code below written so that it is synchronous,
   // and each element of array is handled one after another
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
     const count = await db.collection(collectionName)
       .find({[key]: {$exists: false}}).count();
-    const isOptional = (count > 0);
+    const optional = (count > 0);
     schema.forEach((obj) => {
       if (obj._id === key) {
-        obj.isOptional = isOptional;
+        obj.optional = optional;
       }
     });
   }
+  schema = schema.filter((obj) => {
+    if (obj.hasOwnProperty('optional')) {
+      return obj;
+    }
+  });
   schema = buildSchema(schema);
   await mr.drop();
 
@@ -129,6 +159,7 @@ module.exports = (async function() {
       const schema = await buildSchemaFromCollection(db, col);
       await exportSchema(schema, col, pathName);
     }
+// const test = await buildSchemaFromCollection(db, 'rocketchat_permissions');
   } catch (err) {
     console.log(err.stack);
   }

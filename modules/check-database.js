@@ -21,16 +21,12 @@ module.exports = (async function() {
     collections = getCollectionName(collections);
     // console.log(collections);
     let schema = getSchema(testCollection);
-    console.log(schema);
     schema = new SimpleSchema(schema).newContext();
     const col = db.collection(testCollection);
     const r = await col.find({}).toArray();
-    console.log(r);
     documents = r.map((doc) => {
       schema.validate(doc);
       const res = {};
-      console.log(schema.isValid());
-      console.log(schema.validationErrors());
       res['isValid'] = schema.isValid();
       if (!schema.isValid()) {
         res['errors'] = schemas.validationErrors();
