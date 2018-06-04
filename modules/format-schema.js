@@ -12,13 +12,13 @@ const formatToSchema = (currentKey, into, target) => {
       }
       if (!(Object.keys(newVal).length === 0 &&
       newVal.constructor === Object)) {
-        target[newKey] = {
-          optional,
-          type,
-        };
+        const val = type ? {optional, type} : {optional};
+        target[newKey] = val;
         formatToSchema(newKey, newVal, target);
       } else {
-        newVal['type'] = type;
+        if (type) {
+          newVal['type'] = type;
+        }
         newVal['optional'] = optional;
         target[newKey] = newVal;
       }
@@ -58,10 +58,10 @@ module.exports.buildSchema = (schema) => {
     const optional = obj.optional;
     const fieldIndent = fields.length;
     if (fieldIndent > 1) {
-      const value = {type, optional};
+      const value = type ? {type, optional} : {optional};
       res = addKeys(res, fields, value);
     } else {
-      res[fields[0]] = {type, optional};
+      res[fields[0]] = type ? {type, optional} : {optional};
     }
   });
   return res;
@@ -71,5 +71,10 @@ module.exports.toSchema = (colName) => {
   let schema = require(`../schemas/${colName}.json`);
   let res = {};
   formatToSchema('', schema, res);
+  for (let key in res) {
+    if (!res[key].hasOwnProperty('type')) {
+      delete res[key];
+    }
+  }
   return res;
 };

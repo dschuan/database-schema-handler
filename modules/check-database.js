@@ -6,10 +6,27 @@ const dbData = require('./get-database-info');
 const getCollectionName = require('./handle-collection-data');
 const getSchema = require('./format-schema').toSchema;
 
-module.exports = (async function() {
+const validateFromSchema = (async (db, colName) => {
+  console.log(`Validating ${colName}...`);
+  let schema = getSchema(colName);
+  schema = new SimpleSchema(schema).newContext();
+  const col = db.collection(colName);
+  const r = await col.find({}).toArray();
+  const results = r.map((doc) => {
+    schema.validate(doc);
+    const res = {};
+    res['isValid'] = schema.isValid();
+    if (!schema.isValid()) {
+      res['errors'] = schema.validationErrors();
+    }
+    return res;
+  });
+  console.log('Complete');
+  return results;
+});
+module.exports = (async () => {
   const url = dbData.url;
   const dbName = dbData.dbName;
-  const testCollection = 'rocketchat_apps';
   let client;
   let documents = [];
   try {
@@ -20,19 +37,11 @@ module.exports = (async function() {
     collections = await db.command({'listCollections': 1});
     collections = getCollectionName(collections);
     // console.log(collections);
-    let schema = getSchema(testCollection);
-    schema = new SimpleSchema(schema).newContext();
-    const col = db.collection(testCollection);
-    const r = await col.find({}).toArray();
-    documents = r.map((doc) => {
-      schema.validate(doc);
-      const res = {};
-      res['isValid'] = schema.isValid();
-      if (!schema.isValid()) {
-        res['errors'] = schemas.validationErrors();
-      }
-      return res;
-    });
+    for (let i = 0; i < collections.length; i++) {
+      const res = await validateFromSchema(db, collections[i]);
+      documents.push(res);
+    }
+    console.log(documents);
     return documents;
   } catch (error) {
     if (error) {

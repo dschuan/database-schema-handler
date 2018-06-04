@@ -159,7 +159,7 @@ module.exports = (async function() {
       const schema = await buildSchemaFromCollection(db, col);
       await exportSchema(schema, col, pathName);
     }
-// const test = await buildSchemaFromCollection(db, 'rocketchat_permissions');
+// const test = await buildSchemaFromCollection(db, '');
   } catch (err) {
     console.log(err.stack);
   }
